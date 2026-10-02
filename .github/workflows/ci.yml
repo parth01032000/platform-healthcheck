@@ -28,7 +28,7 @@ jobs:
           with app.app.test_client() as c:
               r = c.get('/health')
               assert r.status_code == 200
-              assert r.get_json()['status'] == 'ok'
+              assert r.get_json()['status'] == 'healthy'
               print('health check test passed')
           "
 
