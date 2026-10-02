@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt bandit
+
+      - name: Run unit tests
+        run: |
+          python -c "
+          import app
+          with app.app.test_client() as c:
+              r = c.get('/health')
+              assert r.status_code == 200
+              assert r.get_json()['status'] == 'ok'
+              print('health check test passed')
+          "
+
+      - name: SAST scan (Bandit)
+        run: bandit -r . -x ./tests
+
+      - name: Build Docker image
+        run: docker build -t platform-healthcheck:${{ github.sha }} .
+
+      - name: Dependency / image scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: platform-healthcheck:${{ github.sha }}
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
