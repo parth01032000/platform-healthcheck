@@ -5,3 +5,7 @@ terraform/.terraform.lock.hcl
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 .DS_Store
+
+venv/
+__pycache__/
+*.pyc
